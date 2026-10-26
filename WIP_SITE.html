@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sessions Console</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+:root{--bg:#f4f5f3;--panel:#fff;--ink:#17212b;--mute:#66717d;--line:#e2e5e1;--side:#17302c;--sideink:#d6e4e0;--acc:#0f766e;--accbg:#d9efec;--ok:#1e7a46;--okbg:#dcf1e4;--warn:#9a5b00;--warnbg:#fbe9c8;--bad:#a8261f;--badbg:#f8dcd9;--info:#3b4fa8;--infobg:#e0e4f7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101615;--panel:#182120;--ink:#e8eeec;--mute:#93a29e;--line:#2a3735;--side:#0b1110;--acc:#3fc1b4;--accbg:#173a36;--ok:#6fd49a;--okbg:#173626;--warn:#f0b958;--warnbg:#3d2f12;--bad:#f08a82;--badbg:#431d1a;--info:#9fb0ff;--infobg:#232b52}}
+:root[data-theme="dark"]{--bg:#101615;--panel:#182120;--ink:#e8eeec;--mute:#93a29e;--line:#2a3735;--side:#0b1110;--acc:#3fc1b4;--accbg:#173a36;--ok:#6fd49a;--okbg:#173626;--warn:#f0b958;--warnbg:#3d2f12;--bad:#f08a82;--badbg:#431d1a;--info:#9fb0ff;--infobg:#232b52}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Instrument Sans",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside:not(.drawer){background:var(--side);color:var(--sideink);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+.brand{font-weight:700;font-size:17px;color:#fff;padding:0 8px;letter-spacing:-.01em}
+.roles{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.07);padding:4px;border-radius:8px}
+.roles button,nav button{all:unset;cursor:pointer;padding:8px 10px;border-radius:6px;color:var(--sideink)}
+.roles button.on{background:#fff;color:#17302c;font-weight:600}
+nav{display:flex;flex-direction:column;gap:2px}
+nav button:hover{background:rgba(255,255,255,.08)}
+nav button.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.who{margin-top:auto;font-size:12px;opacity:.8;padding:0 8px}
+main{padding:28px 32px;max-width:1200px;width:100%}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat b{display:block;font-size:24px;letter-spacing:-.02em;font-weight:600}
+.stat span{color:var(--mute);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:20px}
+.card>header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.card h2{font-size:15px;margin:0;font-weight:600}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th{text-align:left;font-weight:500;color:var(--mute);font-size:12.5px;padding:9px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.ok{background:var(--okbg);color:var(--ok)}.warn{background:var(--warnbg);color:var(--warn)}.bad{background:var(--badbg);color:var(--bad)}.info{background:var(--infobg);color:var(--info)}.mute{background:var(--line);color:var(--mute)}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 11px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+:root[data-theme="dark"] .btn.p{color:#06201d}
+input,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.sec{color:var(--mute);font-size:12.5px}
+.toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:500;z-index:9}
+.stripe{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:12.5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+@media(max-width:820px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.roles{flex-direction:row}.roles button{flex:1;text-align:center}nav{flex-direction:row;flex-wrap:wrap}.who{display:none}main{padding:20px 16px}}
+.drawer-bg{position:fixed;inset:0;background:rgba(10,20,18,.45);z-index:8}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--panel);border-left:1px solid var(--line);z-index:9;overflow-y:auto;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px))}
+.drawer h2{margin:0 0 2px;font-size:19px}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;margin:16px 0}
+.kv dt{color:var(--mute)}.kv dd{margin:0}
+.lnk{all:unset;cursor:pointer;color:var(--acc);font-weight:600}.lnk:hover{text-decoration:underline}
+.lnk:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--bg)}
+h3{font-size:14px;margin:22px 0 8px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{display:inline-block;padding:1px 8px;border-radius:5px;background:var(--accbg);color:var(--acc);font-size:12.5px;font-weight:600}
+.chip.end{background:var(--line);color:var(--mute);text-decoration:line-through}
+.form{display:grid;gap:12px;margin:14px 0}
+.form label{display:grid;gap:4px;color:var(--mute);font-size:12.5px}
+.form input,.form select{font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.total{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--line);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState} = React;
+const $ = n => "$" + n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const tone = {Active:"ok",Paid:"ok",Succeeded:"ok",Enabled:"ok",Approved:"ok","Past due":"bad",Delinquent:"bad",Failed:"bad",Restricted:"bad",Paused:"warn",Pending:"warn",Onboarding:"warn","Not connected":"warn",Refunded:"mute",Canceled:"mute"};
+const B = ({s}) => <span className={"badge "+(tone[s]||"mute")}>{s}</span>;
+
+const PROS = [
+ {id:"P-101",name:"Dr. Elena Ruiz",email:"elena@pro.com",specialty:"Physiotherapy",city:"Austin, TX",rate:85,status:"Active",acct:"acct_1Ox9aK",connect:"Enabled"},
+ {id:"P-102",name:"Marcus Bell",email:"marcus@pro.com",specialty:"Nutrition",city:"Denver, CO",rate:70,status:"Active",acct:"acct_1Ox9bL",connect:"Enabled"},
+ {id:"P-103",name:"Sofia Almeida",email:"sofia@pro.com",specialty:"Coaching",city:"Miami, FL",rate:90,status:"Active",acct:"acct_1Ox9cM",connect:"Restricted"},
+ {id:"P-104",name:"Tomás Greene",email:"tomas@pro.com",specialty:"Physiotherapy",city:"Chicago, IL",rate:80,status:"Onboarding",acct:"—",connect:"Not connected"},
+];
+const CUSTS = [
+ {id:"C-2001",name:"Hannah Cole",email:"hannah@mail.com",pro:"P-101",since:"Jan 12, 2026",cus:"cus_Pq81"},
+ {id:"C-2002",name:"Liam Foster",email:"liam.f@mail.com",pro:"P-102",since:"Feb 03, 2026",cus:"cus_Pq82"},
+ {id:"C-2003",name:"Aisha Khan",email:"aisha@mail.com",pro:"",since:"Sep 28, 2026",cus:"cus_Pq83"},
+ {id:"C-2004",name:"Diego Marín",email:"diego@mail.com",pro:"P-103",since:"Mar 19, 2026",cus:"cus_Pq84"},
+ {id:"C-2005",name:"Grace Wu",email:"grace.wu@mail.com",pro:"",since:"May 07, 2026",cus:"cus_Pq85"},
+ {id:"C-2006",name:"Noah Patel",email:"noah@mail.com",pro:"P-101",since:"Jun 22, 2026",cus:"cus_Pq86"},
+];
+// Plan catalog from PLANS.md. price is the listed price per unit; cycle is what a subscription bills
+// every 30 days (null = sold once, not subscribable); est = cycle estimated from sessions or weeks per month.
+const TAX = "10.55%";
+const CATS = ["Small Group Training","Elite One-on-One","Custom Training Packages","Online Coaching","Assessments","Sports Massage & Recovery","Nutrition & Meal Delivery"];
+const UNIT = {session:" / session",month:" / month",week:" / week",package:" package","one-time":" one-time"};
+let plN = 1;
+const P = (cat,name,desc,price,unit,cycle,tax,est) => { const n=String(plN++).padStart(2,"0"); return {id:"PL-"+n,cat,name,desc,price,unit,cycle,tax:!!tax,est:!!est,stripe:"price_1Mv0"+n,st:"Active"}; };
+const PLAN0 = [
+ // PL-01..04
+ ...[[1,65,4],[2,62,9],[3,59,13],[4,57,17]].map(([n,p,s])=>P(CATS[0],`Small group · ${n}×/week`,`≈${s} sessions/month, billed per session`,p,"session",p*s,1,1)),
+ // PL-05..09 (4-month), PL-10..14 (8-month)
+ ...[[4,[[423,96],[829,94],[1231,93],[1588,90],[1919,87]]],[8,[[419,95],[821,93],[1205,91],[1571,89],[1876,85]]]].flatMap(([m,rows])=>rows.map(([p,s],i)=>P(CATS[1],`Elite membership · ${i+1}×/week · ${m} months`,`$${s}/session · ${m}-month commitment`,p,"month",p,1))),
+ // PL-15..19
+ ...[[1,110],[25,2625],[50,4750],[75,6825],[100,8700]].map(([n,t])=>P(CATS[1],`Elite pack · ${n} session${n>1?"s":""}`,`$${t/n}/session · pay as you go`,t,"package",null,1)),
+ // PL-20..24
+ ...[[1,130],[25,3000],[50,5500],[75,7875],[100,10000]].map(([n,t])=>P(CATS[2],`Custom pack · ${n} session${n>1?"s":""}`,`$${t/n}/session · no monthly commitment`,t,"package",null,1)),
+ // PL-25
+ P(CATS[3],"Monthly online coaching","Remote coaching, billed monthly",200,"month",200),
+ // PL-26..30
+ ...[["Movement & Strength Diagnostic","50 min",165],["Athlete Performance Assessment","60 min",195],["Tennis Performance Profile","70 min",245],["Ready-to-Play Performance Assessment","60–75 min",255]].map(([n,d,p])=>P(CATS[4],n,`${d} · includes performance report`,p,"session",null)),
+ P(CATS[4],"Monthly Performance Monitoring","Weekly testing · includes performance report",130,"month",130),
+ // PL-31..32
+ P(CATS[5],"Recovery session · 60 min","Single session",130,"session",null,1),
+ P(CATS[5],"Recovery package · 10 sessions","$110/session",1100,"package",null,1),
+ // PL-33..38 (individual cycles = 4 weeks, estimated), PL-39
+ ...[["Weekly Plan (individual)","5 days",500,2000,1],["Full Week Plan (individual)","7 days",650,2600,1],["Full Family Plan (3 people)","5 days",1417.5,5670],["Full Family Plan (3 people)","7 days",1957.5,7830],["Lunch + Dinner Family Plan (3 people)","5 days",1012.5,4050],["Lunch + Dinner Family Plan (3 people)","7 days",1417.5,5670]].map(([n,d,p,c,e])=>P(CATS[6],`${n} · ${d}`,"Includes juice set and delivery",p,"week",c,0,e)),
+ P(CATS[6],"Nutrition & Meal Organization Session","45 min",120,"one-time",null),
+];
+// Subscription = a customer and the plans they contracted; each item keeps the cycle price agreed at sale time.
+let siN = 100; const item = (plan,price) => ({id:"si_"+(siN++),plan,price});
+const SUB0 = {
+ "C-2001":{id:"sub_1Nx01",start:"Sep 01, 2026",next:"Oct 31, 2026",st:"Active",items:[item("PL-34",2600)]},
+ "C-2002":{id:"sub_1Nx02",start:"Sep 01, 2026",next:"Oct 31, 2026",st:"Active",items:[item("PL-33",2000),item("PL-02",558)]},
+ "C-2003":{id:"sub_1Nx03",start:"Sep 28, 2026",next:"Oct 28, 2026",st:"Active",items:[item("PL-25",200)]},
+ "C-2004":{id:"sub_1Nx04",start:"Sep 01, 2026",next:"Retry Oct 28",st:"Past due",items:[item("PL-06",829)]},
+ "C-2005":{id:"sub_1Nx05",start:"Aug 02, 2026",next:"—",st:"Paused",items:[item("PL-03",767)]},
+ "C-2006":{id:"sub_1Nx06",start:"Sep 01, 2026",next:"Oct 31, 2026",st:"Active",items:[item("PL-25",200),item("PL-30",130)]},
+};
+// Each payment pays one invoice; its lines are a snapshot of the subscription items billed that cycle.
+const PAY0 = [
+ {id:"pi_3Qa81",date:"Oct 01, 2026",c:"C-2001",st:"Succeeded",inv:"INV-0412"},
+ {id:"pi_3Qa82",date:"Oct 01, 2026",c:"C-2002",st:"Succeeded",inv:"INV-0413"},
+ {id:"pi_3Qa83",date:"Oct 01, 2026",c:"C-2004",st:"Failed",inv:"INV-0414"},
+ {id:"pi_3Qa84",date:"Sep 28, 2026",c:"C-2003",st:"Succeeded",inv:"INV-0409"},
+ {id:"pi_3Qa85",date:"Oct 01, 2026",c:"C-2006",st:"Succeeded",inv:"INV-0415"},
+ {id:"pi_3Qa70",date:"Sep 01, 2026",c:"C-2001",st:"Succeeded",inv:"INV-0380"},
+ {id:"pi_3Qa73",date:"Sep 01, 2026",c:"C-2002",st:"Succeeded",inv:"INV-0381"},
+ {id:"pi_3Qa71",date:"Sep 01, 2026",c:"C-2006",st:"Refunded",inv:"INV-0388"},
+ {id:"pi_3Qa72",date:"Sep 01, 2026",c:"C-2005",st:"Succeeded",inv:"INV-0390"},
+].map(p => { const lines=SUB0[p.c].items.map(({plan,price})=>({plan,price})); return {...p, lines, amt:lines.reduce((a,l)=>a+l.price,0)}; });
+const CYCLE = " / 30 days";
+const PAYOUT0 = [
+ {id:"po_001",p:"P-101",period:"Sep 2026",sessions:46,gross:3910,fee:782,st:"Pending",tr:"—"},
+ {id:"po_002",p:"P-102",period:"Sep 2026",sessions:31,gross:2170,fee:434,st:"Pending",tr:"—"},
+ {id:"po_003",p:"P-103",period:"Sep 2026",sessions:28,gross:2520,fee:504,st:"Approved",tr:"—"},
+ {id:"po_004",p:"P-101",period:"Aug 2026",sessions:44,gross:3740,fee:748,st:"Paid",tr:"tr_1Rm44a"},
+ {id:"po_005",p:"P-102",period:"Aug 2026",sessions:35,gross:2450,fee:490,st:"Paid",tr:"tr_1Rm45b"},
+];
+
+const Table = ({cols,rows,onRow,empty="No results."}) => <div className="scroll"><table>
+ <thead><tr>{cols.map(c=><th key={c.h} className={c.num?"num":""}>{c.h}</th>)}</tr></thead>
+ <tbody>{rows.length?rows.map(r=><tr key={r.id} className={onRow?"click":""} onClick={onRow&&(()=>onRow(r))}>{cols.map(c=><td key={c.h} className={c.num?"num":""}>{c.f(r)}</td>)}</tr>):<tr><td colSpan={cols.length} className="sec">{empty}</td></tr>}</tbody></table></div>;
+const Card = ({title,right,children}) => <section className="card"><header><h2>{title}</h2>{right}</header>{children}</section>;
+const Stats = ({items}) => <div className="stats">{items.map(([v,l])=><div className="stat" key={l}><b>{v}</b><span>{l}</span></div>)}</div>;
+const Head = ({t,s}) => <><h1>{t}</h1><p className="sub">{s}</p></>;
+const Link = ({children,...p}) => <button className="lnk" {...p} onClick={e=>{e.stopPropagation();p.onClick&&p.onClick()}}>{children}</button>;
+const stripeNote = <span className="stripe"><span className="dot"/>Stripe connected · live mode</span>;
+
+function PlanForm({init,label,onSave}){
+  const [v,setV]=useState(init);
+  const set = k => e => setV({...v,[k]:e.target.value});
+  const ok = v.name.trim() && Number(v.price) > 0 && (v.cycle==="" || Number(v.cycle) > 0);
+  return <form className="form" onSubmit={e=>{e.preventDefault(); if(ok) onSave({...v,name:v.name.trim(),desc:v.desc.trim(),price:Number(v.price),cycle:v.cycle===""?null:Number(v.cycle)});}}>
+    <label>Name<input value={v.name} onChange={set("name")} placeholder="e.g. Small group · 2×/week" required/></label>
+    <label>Description<input value={v.desc} onChange={set("desc")} placeholder="What the customer gets"/></label>
+    <label>Category<select value={v.cat} onChange={set("cat")}>{CATS.map(c=><option key={c}>{c}</option>)}</select></label>
+    <div className="row">
+      <label style={{flex:1}}>Listed price (USD)<input type="number" min="1" step="0.01" value={v.price} onChange={set("price")} required/></label>
+      <label style={{flex:1}}>Billed<select value={v.unit} onChange={set("unit")}>{Object.keys(UNIT).map(u=><option key={u} value={u}>{UNIT[u].replace(" / ","per ").trim()}</option>)}</select></label>
+    </div>
+    <label>Charged per 30-day cycle (USD) · leave empty if sold once<input type="number" min="1" step="0.01" value={v.cycle} onChange={set("cycle")}/></label>
+    <label style={{display:"flex",alignItems:"center",gap:"8px"}}><input type="checkbox" checked={v.tax} onChange={e=>setV({...v,tax:e.target.checked})}/>Add {TAX} sales tax</label>
+    <div><button className="btn p" disabled={!ok}>{label}</button></div>
+  </form>;
+}
+
+function AddPlan({options,onAdd}){
+  const [sel,setSel]=useState("");
+  if(!options.length) return <p className="sec">Every active plan is already in this subscription.</p>;
+  return <div className="row">
+    <select aria-label="Plan to add" value={sel} onChange={e=>setSel(e.target.value)}><option value="">Choose a plan…</option>{options.map(p=><option key={p.id} value={p.id}>{p.name} · {$(p.cycle)}{CYCLE}</option>)}</select>
+    <button className="btn p" disabled={!sel} onClick={()=>{onAdd(sel); setSel("");}}>Add plan</button>
+  </div>;
+}
+
+function App(){
+  const [page,setPage]=useState("Payments");
+  const [pays,setPays]=useState(PAY0);
+  const [payouts,setPayouts]=useState(PAYOUT0);
+  const [subs,setSubs]=useState(SUB0);
+  const [plans,setPlans]=useState(PLAN0);
+  const [det,setDet]=useState(null);
+  const [q,setQ]=useState(""); const [f,setF]=useState("All"); const [cat,setCat]=useState("All");
+  const [toast,setToast]=useState("");
+  const say = m => { setToast(m); setTimeout(()=>setToast(""),3200); };
+  const cust = id => CUSTS.find(c=>c.id===id)||{};
+  const pro = id => PROS.find(p=>p.id===id)||{name:"Unassigned"};
+  const plan = id => plans.find(p=>p.id===id)||{name:id};
+  const subSt = id => {
+    const state = subs[id]?.st;
+    if(state==="Past due" && !pays.some(p=>p.c===id&&p.st==="Failed")) return "Active";
+    return state;
+  };
+  const setSubStatus = (id, st) => setSubs(s => ({...s, [id]: {...s[id], st}}));
+  // Total of the next invoice: items scheduled for removal are not billed again.
+  const subTotal = s => s.items.filter(i=>!i.ending).reduce((a,i)=>a+i.price,0);
+  const plansText = items => items.map(i=>plan(i.plan).name).join(" + ");
+  const Chips = ({items}) => <span className="chips">{items.map((i,k)=><span key={i.id||k} className={"chip"+(i.ending?" end":"")}>{plan(i.plan).name}</span>)}</span>;
+  // Items of non-canceled subscriptions that still bill a given plan.
+  const planItems = pid => Object.entries(subs).flatMap(([c,s]) => subSt(c)==="Canceled" ? [] : s.items.filter(i=>i.plan===pid&&!i.ending).map(i=>({...i, id:c, item:i.id, status:subSt(c)})));
+  const go = p => { setPage(p); setQ(""); setF("All"); setCat("All"); setDet(null); };
+  const listed = p => $(p.price)+UNIT[p.unit];
+  const perCycle = p => p.cycle==null ? <span className="sec">Sold once</span> : <>{$(p.cycle)}{p.est&&<span className="sec"> est.</span>}</>;
+
+  const retry = id => { const pay=pays.find(p=>p.id===id); setPays(ps=>ps.map(p=>p.id===id?{...p,st:"Succeeded"}:p)); say(`Charge retried on Stripe. ${$(pay.amt)} collected from ${cust(pay.c).name}.`); };
+  const refund = id => { const pay=pays.find(p=>p.id===id); setPays(ps=>ps.map(p=>p.id===id?{...p,st:"Refunded"}:p)); say(`${$(pay.amt)} refunded to ${cust(pay.c).name}.`); };
+  const act = (id,st) => { setPayouts(ps=>ps.map(p=>p.id===id?{...p,st,tr:st==="Paid"?"tr_1Rm"+Math.floor(Math.random()*900+100)+"z":p.tr}:p)); say(st==="Paid"?"Transfer sent through Stripe Connect.":"Payout approved. Send it when ready."); };
+  const pauseSub = id => { setSubStatus(id, "Paused"); say(`Subscription paused for ${cust(id).name}.`); };
+  const resumeSub = id => { setSubStatus(id, "Active"); say(`Subscription resumed for ${cust(id).name}.`); };
+  const cancelSub = id => { setSubStatus(id, "Canceled"); say(`Subscription canceled for ${cust(id).name}.`); };
+  const reopenSub = id => { setSubStatus(id, "Active"); say(`Subscription reopened for ${cust(id).name}.`); };
+  const retrySubPayment = id => { const failed=pays.find(p=>p.c===id&&p.st==="Failed"); if(failed){ retry(failed.id); setSubStatus(id, "Active"); } else { say("No failed charge found for this subscription."); } };
+  const setItems = (cid, fn) => setSubs(s => ({...s, [cid]: {...s[cid], items: fn(s[cid].items)}}));
+  const addPlan = (cid, pid) => { const p=plan(pid); setItems(cid, items => [...items, item(pid, p.cycle)]); say(`${p.name} added for ${cust(cid).name}. Prorated charge for the rest of this cycle is invoiced now.`); };
+  const removePlan = (cid, iid) => {
+    const s=subs[cid], it=s.items.find(i=>i.id===iid);
+    if(!it.ending && s.items.filter(i=>!i.ending).length===1){ say("A subscription needs at least one plan. Cancel the subscription instead."); return; }
+    setItems(cid, items => items.map(i => i.id===iid ? {...i, ending:!i.ending} : i));
+    say(it.ending ? `${plan(it.plan).name} will keep billing.` : `${plan(it.plan).name} stays until ${s.next}, then is removed. No refund.`);
+  };
+  const createPlan = v => { const p={...v, id:"PL-"+String(plans.length+1).padStart(2,"0"), stripe:"price_1"+Math.random().toString(36).slice(2,8), st:"Active"}; setPlans(ps=>[...ps,p]); setDet({t:"pl",id:p.id}); say(`${p.name} created in Stripe at ${listed(p)}.`); };
+  const updatePlan = (id, v) => {
+    const old=plan(id), priceChanged=v.price!==old.price||v.cycle!==old.cycle||v.unit!==old.unit, n=planItems(id).length;
+    setPlans(ps=>ps.map(p=>p.id===id?{...p, ...v, est:priceChanged?false:p.est, stripe:priceChanged?"price_1"+Math.random().toString(36).slice(2,8):p.stripe}:p));
+    say(priceChanged ? `New price ${listed({...old,...v})} applies to new sales. ${n} current subscription${n===1?"":"s"} keep${n===1?"s":""} the price they bought at.` : "Plan updated.");
+  };
+  const setPlanSt = (id, st) => { setPlans(ps=>ps.map(p=>p.id===id?{...p,st}:p)); say(st==="Archived" ? `${plan(id).name} archived. Current subscriptions keep it; it can't be sold anymore.` : `${plan(id).name} is for sale again.`); };
+
+  const match = s => s.toLowerCase().includes(q.toLowerCase());
+  const search = <input placeholder="Search" aria-label="Search" value={q} onChange={e=>setQ(e.target.value)}/>;
+  const filter = opts => <select aria-label="Filter by status" value={f} onChange={e=>setF(e.target.value)}><option>All</option>{opts.map(o=><option key={o}>{o}</option>)}</select>;
+  const rowBtn = (label,fn,p) => <button className={"btn"+(p?" p":"")} onClick={e=>{e.stopPropagation();fn()}}>{label}</button>;
+  const subRows = CUSTS.map(c => ({id:c.id, customer:c, sub:subs[c.id], status:subSt(c.id)}));
+
+  const payActions = r => r.st==="Failed" ? rowBtn("Retry charge",()=>retry(r.id),1) : r.st==="Succeeded" ? rowBtn("Refund",()=>refund(r.id)) : <span className="sec">—</span>;
+  const poActions = r => r.st==="Pending" ? rowBtn("Approve",()=>act(r.id,"Approved"),1)
+    : r.st==="Approved" ? (pro(r.p).connect==="Enabled" ? rowBtn("Send transfer",()=>act(r.id,"Paid"),1) : <span className="sec">Fix Stripe account first</span>) : <span className="sec">—</span>;
+  const subActions = r => r.status==="Past due" ? rowBtn("Retry payment",()=>retrySubPayment(r.id),1)
+    : r.status==="Paused" ? <>{rowBtn("Resume",()=>resumeSub(r.id),1)} {rowBtn("Cancel",()=>cancelSub(r.id))}</>
+    : r.status==="Active" ? <>{rowBtn("Pause",()=>pauseSub(r.id),1)} {rowBtn("Cancel",()=>cancelSub(r.id))}</>
+    : r.status==="Canceled" ? rowBtn("Reopen",()=>reopenSub(r.id),1)
+    : <span className="sec">—</span>;
+
+  let view;
+  if(page==="Payments"){
+    const rows = pays.filter(p=>(f==="All"||p.st===f) && match(cust(p.c).name+p.id+p.inv+subs[p.c].id+plansText(p.lines)));
+    const ok = pays.filter(p=>p.st==="Succeeded").reduce((a,p)=>a+p.amt,0);
+    view=<><Head t="Payments" s="Every charge, linked to the customer and the subscription it belongs to."/>
+    <Stats items={[[$(ok),"Collected"],[pays.filter(p=>p.st==="Failed").length,"Failed, need action"],[$(pays.filter(p=>p.st==="Refunded").reduce((a,p)=>a+p.amt,0)),"Refunded"],[Object.keys(subs).filter(k=>subSt(k)==="Active").length+" of "+CUSTS.length,"Subscriptions active"]]}/>
+    <Card title="Subscription payments" right={<div className="filters">{search}{filter(["Succeeded","Failed","Refunded"])}{stripeNote}</div>}>
+     <Table rows={rows} empty="No payments match these filters." cols={[
+      {h:"Date",f:r=>r.date},{h:"Customer",f:r=><Link onClick={()=>setDet({t:"c",id:r.c})}>{cust(r.c).name}</Link>},
+      {h:"Plans billed",f:r=><><Chips items={r.lines}/><div className="sec">{subs[r.c].id}</div></>},
+      {h:"Invoice",f:r=><>{r.inv}<div className="sec">{r.id}</div></>},{h:"Amount",num:1,f:r=>$(r.amt)},
+      {h:"Status",f:r=><B s={r.st}/>},{h:"Action",f:payActions}]}/></Card></>;
+  }
+  if(page==="Subscriptions"){
+    const rows = subRows.filter(r=>(f==="All"||r.status===f) && match(r.customer.name+r.customer.email+r.sub.id+plansText(r.sub.items)));
+    const active = subRows.filter(r=>r.status==="Active").length;
+    const pastDue = subRows.filter(r=>r.status==="Past due").length;
+    const paused = subRows.filter(r=>r.status==="Paused").length;
+    const canceled = subRows.filter(r=>r.status==="Canceled").length;
+    view=<><Head t="Subscriptions" s="Which customer contracted which plans. One subscription per customer, charged once per 30-day cycle."/>
+    <Stats items={[[active,"Active subscriptions"],[pastDue,"Past due"],[paused,"Paused"],[canceled,"Canceled"]]}/>
+    <Card title="All subscriptions" right={<div className="filters">{search}{filter(["Active","Past due","Paused","Canceled"])}</div>}>
+     <Table rows={rows} onRow={r=>setDet({t:"c",id:r.id})} empty="No subscriptions match these filters." cols={[
+      {h:"Customer",f:r=><><Link onClick={()=>setDet({t:"c",id:r.id})}>{r.customer.name}</Link><div className="sec">{r.customer.email}</div></>},
+      {h:"Plans contracted",f:r=><Chips items={r.sub.items}/>},
+      {h:"Start date",f:r=>r.sub.start},{h:"Total"+CYCLE,num:1,f:r=>$(subTotal(r.sub))},{h:"Status",f:r=><B s={r.status}/>},{h:"Action",f:r=>subActions(r)}
+     ]}/></Card></>;
+  }
+  if(page==="Plans"){
+    const rows = plans.filter(p=>(f==="All"||p.st===f) && (cat==="All"||p.cat===cat) && match(p.name+p.desc+p.id+p.stripe+p.cat));
+    const sold = plans.map(p=>({p, n:planItems(p.id).length})).sort((a,b)=>b.n-a.n)[0];
+    const recurring = Object.keys(subs).filter(c=>subSt(c)==="Active").reduce((a,c)=>a+subTotal(subs[c]),0);
+    const cols = [
+      {h:"Plan",f:r=><>{r.name}<div className="sec">{r.desc||r.id}</div></>},
+      {h:"Listed price",num:1,f:listed},{h:"Per 30-day cycle",num:1,f:perCycle},
+      {h:"Sales tax",f:r=>r.tax?"+"+TAX:<span className="sec">—</span>},
+      {h:"Subscribers",num:1,f:r=>r.cycle==null?<span className="sec">—</span>:planItems(r.id).length},
+      {h:"Stripe price",f:r=><span className="sec">{r.stripe}</span>},{h:"Status",f:r=><B s={r.st}/>},
+      {h:"Action",f:r=>r.st==="Active"?rowBtn("Archive",()=>setPlanSt(r.id,"Archived")):rowBtn("Restore",()=>setPlanSt(r.id,"Active"),1)}];
+    const groups = CATS.map(c=>[c, rows.filter(p=>p.cat===c)]).filter(([,r])=>r.length);
+    view=<><Head t="Plans" s="Price list by service. Plans with a 30-day cycle price can be added to a subscription; packages and single sessions are sold once."/>
+    <Stats items={[[plans.filter(p=>p.st==="Active").length,"Plans for sale"],[plans.filter(p=>p.st==="Active"&&p.cycle!=null).length,"Subscribable plans"],[$(recurring),"Recurring revenue"+CYCLE],[sold&&sold.n?sold.p.name:"—","Best-selling plan"]]}/>
+    <Card title="Plan catalog" right={<div className="filters">{search}
+      <select aria-label="Filter by category" value={cat} onChange={e=>setCat(e.target.value)}><option value="All">All categories</option>{CATS.map(c=><option key={c}>{c}</option>)}</select>
+      {filter(["Active","Archived"])}<button className="btn p" onClick={()=>setDet({t:"npl"})}>New plan</button></div>}>
+     {!groups.length&&<p className="sec" style={{padding:"0 16px"}}>No plans match these filters.</p>}
+    </Card>
+    {groups.map(([c,r])=><Card key={c} title={c} right={<span className="sec">{r.length} plan{r.length===1?"":"s"}</span>}>
+     <Table rows={r} onRow={x=>setDet({t:"pl",id:x.id})} cols={cols}/></Card>)}</>;
+  }
+  if(page==="Payouts"){
+    const rows = payouts.filter(p=>(f==="All"||p.st===f) && match(pro(p.p).name+p.id+p.period));
+    const owed = payouts.filter(p=>p.st!=="Paid").reduce((a,p)=>a+p.gross-p.fee,0);
+    view=<><Head t="Payouts" s="Biweekly earnings owed to each professional, after the platform fee."/>
+    <Stats items={[[$(owed),"Owed to professionals"],[payouts.filter(p=>p.st==="Pending").length,"Waiting for approval"],[payouts.filter(p=>p.st==="Approved").length,"Approved, not sent"],[PROS.filter(p=>p.connect!=="Enabled").length,"Stripe accounts need attention"]]}/>
+    <Card title="Professional payouts" right={<div className="filters">{search}{filter(["Pending","Approved","Paid"])}{stripeNote}</div>}>
+     <Table rows={rows} onRow={r=>setDet({t:"o",id:r.id})} empty="No payouts match these filters." cols={[
+      {h:"Professional",f:r=><Link onClick={()=>setDet({t:"p",id:r.p})}>{pro(r.p).name}</Link>},{h:"Period",f:r=>r.period},
+      {h:"Sessions",num:1,f:r=>r.sessions},{h:"Gross",num:1,f:r=>$(r.gross)},{h:"Platform fee",num:1,f:r=>"−"+$(r.fee)},
+      {h:"Net payout",num:1,f:r=><b>{$(r.gross-r.fee)}</b>},{h:"Stripe account",f:r=><B s={pro(r.p).connect}/>},
+      {h:"Status",f:r=><B s={r.st}/>},{h:"Action",f:poActions}]}/></Card></>;
+  }
+  if(page==="Customers"){
+    const rows = CUSTS.filter(c=>(f==="All"||subSt(c.id)===f) && match(c.name+c.email+c.id));
+    view=<><Head t="Customers" s="Select a customer to see their subscription and payment history."/>
+    <Card title={`${rows.length} customers`} right={<div className="filters">{search}{filter(["Active","Past due","Paused"])}</div>}>
+     <Table rows={rows} onRow={r=>setDet({t:"c",id:r.id})} empty="No customers match these filters." cols={[
+      {h:"Customer",f:r=><>{r.name}<div className="sec">{r.email}</div></>},{h:"Subscription",f:r=><><Chips items={subs[r.id].items}/><div className="sec">{$(subTotal(subs[r.id]))}{CYCLE} · {subs[r.id].id}</div></>},
+      {h:"Next charge",f:r=>subs[r.id].next},{h:"Professional",f:r=>r.pro?<Link onClick={()=>setDet({t:"p",id:r.pro})}>{pro(r.pro).name}</Link>:<B s="Pending"/>},
+      {h:"Paid to date",num:1,f:r=>$(pays.filter(p=>p.c===r.id&&p.st==="Succeeded").reduce((a,p)=>a+p.amt,0))},{h:"Status",f:r=><B s={subSt(r.id)}/>}]}/></Card></>;
+  }
+  if(page==="Professionals"){
+    const rows = PROS.filter(p=>(f==="All"||p.connect===f) && match(p.name+p.email+p.specialty));
+    view=<><Head t="Professionals" s="Who delivers sessions, who they serve and whether Stripe can pay them."/>
+    <Card title={`${rows.length} professionals`} right={<div className="filters">{search}{filter(["Enabled","Restricted","Not connected"])}</div>}>
+     <Table rows={rows} onRow={r=>setDet({t:"p",id:r.id})} empty="No professionals match these filters." cols={[
+      {h:"Professional",f:r=><>{r.name}<div className="sec">{r.email}</div></>},{h:"Specialty",f:r=>r.specialty},{h:"City",f:r=>r.city},
+      {h:"Customers",num:1,f:r=>CUSTS.filter(c=>c.pro===r.id).length},{h:"Rate / session",num:1,f:r=>$(r.rate)},
+      {h:"Owed",num:1,f:r=>$(payouts.filter(p=>p.p===r.id&&p.st!=="Paid").reduce((a,p)=>a+p.gross-p.fee,0))},
+      {h:"Stripe account",f:r=><B s={r.connect}/>},{h:"Status",f:r=><B s={r.status}/>}]}/></Card></>;
+  }
+
+  let drawer=null;
+  if(det){
+    if(det.t==="c"){ const c=cust(det.id), s=subs[det.id], editable=subSt(c.id)!=="Canceled"; drawer=<>
+      <h2>{c.name}</h2><div className="sec">{c.id} · {c.email}</div>
+      <div style={{display:"flex",gap:"8px",flexWrap:"wrap",margin:"14px 0 4px"}}>
+        {subSt(c.id)==="Active"&&<button className="btn p" onClick={()=>pauseSub(c.id)}>Pause subscription</button>}
+        {subSt(c.id)==="Paused"&&<button className="btn p" onClick={()=>resumeSub(c.id)}>Resume subscription</button>}
+        {subSt(c.id)==="Past due"&&<button className="btn p" onClick={()=>retrySubPayment(c.id)}>Retry payment</button>}
+        {subSt(c.id)!=="Canceled"&&<button className="btn" onClick={()=>cancelSub(c.id)}>Cancel</button>}
+        {subSt(c.id)==="Canceled"&&<button className="btn p" onClick={()=>reopenSub(c.id)}>Reopen</button>}
+      </div>
+      <dl className="kv"><dt>Subscription</dt><dd>{$(subTotal(s))}{CYCLE} <B s={subSt(c.id)}/></dd><dt>Start date</dt><dd>{s.start}</dd><dt>Stripe</dt><dd>{s.id} · {c.cus}</dd><dt>Next charge</dt><dd>{s.next}</dd>
+      <dt>Professional</dt><dd>{c.pro?<Link onClick={()=>setDet({t:"p",id:c.pro})}>{pro(c.pro).name}</Link>:"Not assigned yet"}</dd><dt>Customer since</dt><dd>{c.since}</dd></dl>
+      <h3>Plans included</h3>
+      <div className="card"><Table rows={s.items} cols={[
+        {h:"Plan",f:r=><><Link onClick={()=>setDet({t:"pl",id:r.plan})}>{plan(r.plan).name}</Link>{r.ending&&<div className="sec">Removed after {s.next}</div>}</>},
+        {h:"Price",num:1,f:r=>r.ending?<s className="sec">{$(r.price)}</s>:$(r.price)},
+        {h:"",f:r=>editable?rowBtn(r.ending?"Keep":"Remove",()=>removePlan(c.id,r.id)):null}]}/>
+        <div className="total"><span>Next invoice</span><span>{$(subTotal(s))}</span></div></div>
+      {editable&&<AddPlan options={plans.filter(p=>p.st==="Active"&&p.cycle!=null&&!s.items.some(i=>i.plan===p.id))} onAdd={pid=>addPlan(c.id,pid)}/>}
+      <h3>Payments</h3><Table rows={pays.filter(p=>p.c===c.id)} cols={[{h:"Date",f:r=>r.date},{h:"Invoice",f:r=><>{r.inv}<div className="sec">{plansText(r.lines)}</div></>},{h:"Amount",num:1,f:r=>$(r.amt)},{h:"Status",f:r=><B s={r.st}/>},{h:"",f:payActions}]}/></>; }
+    if(det.t==="pl"){ const p=plan(det.id), rows=planItems(p.id); drawer=<>
+      <h2>{p.name}</h2><div className="sec">{p.id} · {p.desc}</div>
+      <div className="row" style={{margin:"14px 0 4px"}}>{p.st==="Active"?<button className="btn" onClick={()=>setPlanSt(p.id,"Archived")}>Archive plan</button>:<button className="btn p" onClick={()=>setPlanSt(p.id,"Active")}>Restore plan</button>}</div>
+      <dl className="kv"><dt>Category</dt><dd>{p.cat}</dd><dt>Listed price</dt><dd>{listed(p)}</dd><dt>Per 30-day cycle</dt><dd>{perCycle(p)}</dd>
+      <dt>Sales tax</dt><dd>{p.tax?"+"+TAX:"None"}</dd><dt>Stripe price</dt><dd>{p.stripe}</dd><dt>Status</dt><dd><B s={p.st}/></dd><dt>Subscribers</dt><dd>{rows.length}</dd></dl>
+      <h3>Edit plan</h3><p className="sec">Changing the price creates a new Stripe price for new sales. Current subscriptions keep the price they bought at.</p>
+      <PlanForm key={p.id+p.stripe} init={{name:p.name,desc:p.desc||"",cat:p.cat,price:p.price,unit:p.unit,cycle:p.cycle??"",tax:p.tax}} label="Save changes" onSave={v=>updatePlan(p.id,v)}/>
+      <h3>Subscriptions with this plan</h3><Table rows={rows} empty="Nobody has this plan yet." cols={[
+        {h:"Customer",f:r=><Link onClick={()=>setDet({t:"c",id:r.id})}>{cust(r.id).name}</Link>},{h:"Price paid",num:1,f:r=>$(r.price)},{h:"Status",f:r=><B s={r.status}/>}]}/></>; }
+    if(det.t==="npl"){ drawer=<>
+      <h2>New plan</h2><div className="sec">Creates a Stripe product. Plans with a cycle price are billed every 30 days.</div>
+      <PlanForm init={{name:"",desc:"",cat:CATS[0],price:"",unit:"month",cycle:"",tax:false}} label="Create plan" onSave={createPlan}/></>; }
+    if(det.t==="p"){ const p=pro(det.id); drawer=<>
+      <h2>{p.name}</h2><div className="sec">{p.id} · {p.email}</div>
+      <dl className="kv"><dt>Specialty</dt><dd>{p.specialty}</dd><dt>Base city</dt><dd>{p.city}</dd><dt>Rate</dt><dd>{$(p.rate)} per session</dd>
+      <dt>Stripe Connect</dt><dd>{p.acct} <B s={p.connect}/></dd><dt>Status</dt><dd><B s={p.status}/></dd></dl>
+      <h3>Assigned customers</h3><Table rows={CUSTS.filter(c=>c.pro===p.id)} empty="No customers assigned." cols={[{h:"Customer",f:r=><Link onClick={()=>setDet({t:"c",id:r.id})}>{r.name}</Link>},{h:"Plans",f:r=><Chips items={subs[r.id].items}/>},{h:"Status",f:r=><B s={subSt(r.id)}/>}]}/>
+      <h3>Payouts</h3><Table rows={payouts.filter(o=>o.p===p.id)} empty="No payouts yet." cols={[{h:"Period",f:r=>r.period},{h:"Net",num:1,f:r=>$(r.gross-r.fee)},{h:"Status",f:r=><B s={r.st}/>},{h:"",f:poActions}]}/></>; }
+    if(det.t==="o"){ const o=payouts.find(x=>x.id===det.id), p=pro(o.p); drawer=<>
+      <h2>Payout {o.id}</h2><div className="sec">{o.period} · <Link onClick={()=>setDet({t:"p",id:o.p})}>{p.name}</Link></div>
+      <dl className="kv"><dt>Sessions</dt><dd>{o.sessions} × {$(o.gross/o.sessions)} avg</dd><dt>Gross</dt><dd>{$(o.gross)}</dd><dt>Platform fee (20%)</dt><dd>−{$(o.fee)}</dd>
+      <dt>Net payout</dt><dd><b>{$(o.gross-o.fee)}</b></dd><dt>Destination</dt><dd>{p.acct} <B s={p.connect}/></dd><dt>Transfer</dt><dd>{o.tr}</dd><dt>Status</dt><dd><B s={o.st}/></dd></dl>
+      <div>{poActions(o)}</div></>; }
+  }
+
+  return <div className="app">
+    <aside><div className="brand">Sessions Console</div>
+     <nav aria-label="Main">{["Payments","Subscriptions","Plans","Payouts","Customers","Professionals"].map(p=><button key={p} className={p===page?"on":""} onClick={()=>go(p)}>{p}</button>)}</nav>
+     <div className="who">Signed in as Ops admin</div></aside>
+    <main>{view}</main>
+    {det&&<><div className="drawer-bg" onClick={()=>setDet(null)}/><aside className="drawer" style={{height:"auto",position:"fixed"}} role="dialog" aria-label="Details">
+      <div style={{textAlign:"right"}}><button className="btn" onClick={()=>setDet(null)}>Close</button></div>{drawer}</aside></>}
+    {toast&&<div className="toast" role="status">{toast}</div>}
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
